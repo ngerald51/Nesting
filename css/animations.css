@@ -1,0 +1,528 @@
+/* ==========================================
+   ANIMATIONS CSS - Animations & Transitions
+   ========================================== */
+
+/* ========== Keyframe Animations ========== */
+
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Fade Out */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* Slide Up */
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide Down */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide In Right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide In Left */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Pulse Scale (for critical risk) */
+@keyframes pulse-scale {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Pulse Border */
+@keyframes pulse-border {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(255, 87, 34, 0);
+    }
+}
+
+/* Pulse Opacity */
+@keyframes pulse-opacity {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Spin */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Wobble */
+@keyframes wobble {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Shake */
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-4px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(4px);
+    }
+}
+
+/* Bounce */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Glow */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(33, 150, 243, 0.9);
+    }
+}
+
+/* ========== Transaction Flow Animations ========== */
+
+/* Flow particles moving along connection */
+@keyframes flow-particle {
+    from {
+        offset-distance: 0%;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    to {
+        offset-distance: 100%;
+        opacity: 0;
+    }
+}
+
+/* Dashed line animation for connections */
+@keyframes dash-flow {
+    from {
+        stroke-dashoffset: 0;
+    }
+    to {
+        stroke-dashoffset: 100;
+    }
+}
+
+/* Connection highlight animation */
+@keyframes connection-highlight {
+    0%, 100% {
+        stroke-width: 2;
+        opacity: 1;
+    }
+    50% {
+        stroke-width: 4;
+        opacity: 0.7;
+    }
+}
+
+/* Money flow pulse effect */
+@keyframes money-flow {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+/* ========== Entity Node Animations ========== */
+
+/* Node appears on creation */
+.entity-node.entering {
+    animation: slideUp 0.3s ease-out;
+}
+
+/* Node being deleted */
+.entity-node.exiting {
+    animation: fadeOut 0.2s ease-out forwards;
+}
+
+/* Node selection animation */
+.entity-node.selecting {
+    animation: pulse-scale 0.2s ease-out;
+}
+
+/* Critical risk pulse */
+.entity-node.risk-critical-pulse {
+    animation: pulse-opacity 1.5s ease-in-out infinite;
+}
+
+/* ========== Connection Animations ========== */
+
+/* Active transaction flow */
+.connection-active {
+    animation: connection-highlight 1s ease-in-out infinite;
+}
+
+/* Suspicious transaction (dashed animation) */
+.connection-suspicious {
+    stroke-dasharray: 5, 5;
+    animation: dash-flow 1s linear infinite;
+}
+
+/* ========== Timeline Player Animations ========== */
+
+/* Playing indicator */
+@keyframes playing-pulse {
+    0%, 100% {
+        background-color: var(--color-primary);
+    }
+    50% {
+        background-color: #1976D2;
+    }
+}
+
+.timeline-playing {
+    animation: playing-pulse 1s ease-in-out infinite;
+}
+
+/* ========== Pattern Detection Animations ========== */
+
+/* Pattern card appears */
+.pattern-card.appearing {
+    animation: slideInRight 0.3s ease-out;
+}
+
+/* Pattern highlight effect */
+.pattern-highlight-overlay {
+    animation: pulse-opacity 2s ease-in-out infinite;
+}
+
+/* ========== Risk Analysis Animations ========== */
+
+/* Risk meter fill animation */
+.risk-meter-fill.updating {
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Risk badge update */
+.risk-badge.updating {
+    animation: bounce 0.4s ease-out;
+}
+
+/* ========== Loading Animations ========== */
+
+/* Loading spinner */
+.spinner {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* Loading dots */
+@keyframes dot-flashing {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+.loading-dots {
+    display: inline-flex;
+    gap: 4px;
+}
+
+.loading-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    animation: dot-flashing 1.4s infinite;
+}
+
+.loading-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Skeleton loading */
+@keyframes skeleton-loading {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--color-bg-secondary) 0%,
+        var(--color-bg-tertiary) 50%,
+        var(--color-bg-secondary) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: var(--radius-sm);
+}
+
+/* ========== Tooltip Animations ========== */
+
+/* Tooltip fade in */
+.tooltip {
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* Tooltip fade out */
+.tooltip.hiding {
+    animation: fadeOut 0.2s ease-out;
+}
+
+/* ========== Notification Animations ========== */
+
+/* Notification slide in */
+@keyframes notification-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Notification slide out */
+@keyframes notification-out {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+.notification {
+    animation: notification-in 0.3s ease-out;
+}
+
+.notification.hiding {
+    animation: notification-out 0.3s ease-out;
+}
+
+/* ========== Canvas Interaction Animations ========== */
+
+/* Zoom in effect */
+.canvas-zooming-in {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Zoom out effect */
+.canvas-zooming-out {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pan transition */
+.canvas-panning {
+    transition: transform 0.2s ease-out;
+}
+
+/* ========== Drag & Drop Animations ========== */
+
+/* Dragging state */
+.dragging {
+    opacity: 0.7;
+    cursor: grabbing !important;
+    transition: opacity 0.1s ease;
+}
+
+/* Drop zone highlight */
+@keyframes drop-zone-highlight {
+    0%, 100% {
+        background-color: rgba(33, 150, 243, 0.05);
+        border-color: var(--color-primary);
+    }
+    50% {
+        background-color: rgba(33, 150, 243, 0.1);
+        border-color: #1976D2;
+    }
+}
+
+.drop-zone-active {
+    animation: drop-zone-highlight 1s ease-in-out infinite;
+}
+
+/* ========== Analysis Running Animations ========== */
+
+/* Analysis in progress indicator */
+@keyframes analysis-running {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+    50% {
+        transform: scale(1.05) rotate(180deg);
+    }
+    100% {
+        transform: scale(1) rotate(360deg);
+    }
+}
+
+.analyzing {
+    animation: analysis-running 2s ease-in-out infinite;
+}
+
+/* ========== Utility Animation Classes ========== */
+
+/* Fade in (utility class) */
+.fade-in {
+    animation: fadeIn var(--transition-medium);
+}
+
+/* Fade out (utility class) */
+.fade-out {
+    animation: fadeOut var(--transition-medium);
+}
+
+/* Slide up (utility class) */
+.slide-up {
+    animation: slideUp var(--transition-medium);
+}
+
+/* Slide down (utility class) */
+.slide-down {
+    animation: slideDown var(--transition-medium);
+}
+
+/* Shake (utility class) */
+.shake {
+    animation: shake 0.5s ease-in-out;
+}
+
+/* Wobble (utility class) */
+.wobble {
+    animation: wobble 0.5s ease-in-out;
+}
+
+/* Bounce (utility class) */
+.bounce {
+    animation: bounce 0.5s ease-in-out;
+}
+
+/* Glow (utility class) */
+.glow {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* ========== Performance Optimizations ========== */
+
+/* Use GPU acceleration for better performance */
+.entity-node,
+.connection-active,
+.timeline-scrubber,
+.modal-content {
+    will-change: transform;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

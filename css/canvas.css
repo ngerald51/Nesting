@@ -1,0 +1,402 @@
+/* ==========================================
+   CANVAS CSS - Flow Canvas Styling
+   ========================================== */
+
+/* ========== Canvas Container ========== */
+.canvas-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary);
+    position: relative;
+    overflow: hidden;
+}
+
+.canvas-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-md);
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.simulation-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.simulation-name-input {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 16px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-primary);
+    outline: none;
+    transition: all var(--transition-fast);
+}
+
+.simulation-name-input:hover {
+    background: var(--color-bg-secondary);
+    border-color: var(--color-border);
+}
+
+.simulation-name-input:focus {
+    background: white;
+    border-color: var(--color-primary);
+}
+
+.simulation-stats {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.canvas-controls {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+/* ========== Flow Canvas ========== */
+.flow-canvas {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #FAFAFA;
+    cursor: grab;
+}
+
+.flow-canvas:active {
+    cursor: grabbing;
+}
+
+.canvas-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(to right, #E0E0E0 1px, transparent 1px),
+        linear-gradient(to bottom, #E0E0E0 1px, transparent 1px);
+    background-size: 20px 20px;
+    z-index: var(--z-base);
+    pointer-events: none;
+}
+
+.nodes-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5000px;
+    height: 5000px;
+    transform-origin: 0 0;
+    z-index: var(--z-nodes);
+}
+
+/* ========== Entity Nodes ========== */
+.entity-node {
+    position: absolute;
+    min-width: 200px;
+    background: white;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    cursor: move;
+    transition: box-shadow var(--transition-fast), border-color var(--transition-fast), opacity var(--transition-fast);
+    z-index: var(--z-nodes);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.entity-node:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.entity-node.selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2), var(--shadow-lg);
+}
+
+.entity-node.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+    transition: none;
+    transform: none;
+}
+
+.entity-node.highlighted {
+    animation: pulse-border 1.5s ease-in-out infinite;
+}
+
+.entity-node.pattern-highlight {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.3), var(--shadow-lg);
+}
+
+/* Node Header */
+.node-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    cursor: grab;
+}
+
+.node-header:active {
+    cursor: grabbing;
+}
+
+.node-icon {
+    font-size: 24px;
+    line-height: 1;
+}
+
+.node-title {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.node-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.node-type {
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-transform: capitalize;
+}
+
+.node-flag {
+    font-size: 20px;
+    line-height: 1;
+}
+
+/* Node Body */
+.node-body {
+    padding: var(--spacing-md);
+}
+
+.node-field {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+    font-size: 12px;
+}
+
+.node-field:last-child {
+    margin-bottom: 0;
+}
+
+.node-field-label {
+    color: var(--color-text-secondary);
+    font-weight: 500;
+}
+
+.node-field-value {
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+/* Risk Badge */
+.risk-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    min-width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--spacing-sm);
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+    z-index: 10;
+}
+
+.risk-badge.risk-low {
+    background: var(--color-risk-low);
+}
+
+.risk-badge.risk-medium {
+    background: var(--color-risk-medium);
+    color: var(--color-text-primary);
+}
+
+.risk-badge.risk-high {
+    background: var(--color-risk-high);
+}
+
+.risk-badge.risk-critical {
+    background: var(--color-risk-critical);
+    animation: pulse-scale 1.5s ease-in-out infinite;
+}
+
+/* AML Stage Indicator */
+.aml-stage-indicator {
+    height: 4px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.aml-stage-placement {
+    background: var(--color-placement);
+}
+
+.aml-stage-layering {
+    background: var(--color-layering);
+}
+
+.aml-stage-integration {
+    background: var(--color-integration);
+}
+
+/* ========== Canvas Legend ========== */
+.canvas-legend {
+    position: absolute;
+    bottom: var(--spacing-md);
+    left: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    z-index: var(--z-controls);
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 12px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-label {
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+/* ========== Connections (jsPlumb) ========== */
+
+/* Ensure jsPlumb SVG canvas renders above entity nodes */
+.nodes-container > svg {
+    position: absolute;
+    z-index: 25;
+    pointer-events: none;
+}
+
+/* Label overlays are HTML divs — keep them on top too */
+.connection-label-overlay {
+    z-index: 26;
+    position: absolute;
+    pointer-events: auto;
+}
+
+.connection-label {
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Transaction Particle (for animation) */
+.transaction-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(33, 150, 243, 0.8);
+    pointer-events: none;
+    z-index: var(--z-connections);
+}
+
+/* ========== Context Menu ========== */
+.context-menu {
+    position: absolute;
+    min-width: 150px;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xs) 0;
+    z-index: var(--z-modal);
+}
+
+.context-menu-item {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.context-menu-item:hover {
+    background: var(--color-bg-secondary);
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--spacing-xs) 0;
+}
+
+/* ========== Node Connection Points ========== */
+.node-endpoint {
+    width: 10px;
+    height: 10px;
+    background: var(--color-primary);
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
+.node-endpoint:hover {
+    background: #1976D2;
+    transform: scale(1.2);
+}
+
+.node-endpoint.connected {
+    background: var(--color-success);
+}
+
+/* ========== Responsive Adjustments ========== */
+@media (max-width: 1024px) {
+    .entity-node {
+        min-width: 160px;
+    }
+
+    .node-header {
+        padding: var(--spacing-sm);
+    }
+
+    .node-body {
+        padding: var(--spacing-sm);
+    }
+}

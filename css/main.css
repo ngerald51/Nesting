@@ -1,0 +1,337 @@
+/* ==========================================
+   BANKING FINANCIAL CRIME NESTING SIMULATOR
+   Main CSS - Base Styles & Layout
+   ========================================== */
+
+/* ========== CSS Variables ========== */
+:root {
+    /* AML Stage Colors */
+    --color-placement: #F44336;
+    --color-layering: #FF9800;
+    --color-integration: #4CAF50;
+
+    /* Risk Level Colors */
+    --color-risk-low: #4CAF50;
+    --color-risk-medium: #FFEB3B;
+    --color-risk-high: #FF5722;
+    --color-risk-critical: #B71C1C;
+
+    /* FATF Rating Colors */
+    --color-fatf-compliant: #4CAF50;
+    --color-fatf-enhanced: #FFEB3B;
+    --color-fatf-greylist: #FF9800;
+    --color-fatf-blacklist: #F44336;
+
+    /* UI Colors */
+    --color-primary: #2196F3;
+    --color-secondary: #757575;
+    --color-accent: #FF5722;
+    --color-success: #4CAF50;
+    --color-warning: #FF9800;
+    --color-error: #F44336;
+    --color-info: #2196F3;
+
+    /* Neutral Colors */
+    --color-bg-primary: #FFFFFF;
+    --color-bg-secondary: #F5F5F5;
+    --color-bg-tertiary: #EEEEEE;
+    --color-border: #E0E0E0;
+    --color-text-primary: #212121;
+    --color-text-secondary: #757575;
+    --color-text-hint: #9E9E9E;
+
+    /* Layout Dimensions */
+    --toolbar-height: 60px;
+    --sidebar-width: 280px;
+    --timeline-height: 80px;
+
+    /* Spacing */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-medium: 250ms ease;
+    --transition-slow: 350ms ease;
+
+    /* Z-Index Layers */
+    --z-base: 1;
+    --z-canvas: 10;
+    --z-nodes: 20;
+    --z-connections: 15;
+    --z-controls: 30;
+    --z-sidebar: 40;
+    --z-toolbar: 50;
+    --z-modal: 100;
+    --z-tooltip: 200;
+}
+
+/* ========== Reset & Base Styles ========== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--color-text-primary);
+    background: var(--color-bg-secondary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== Main Layout ========== */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--toolbar-height);
+    padding: 0 var(--spacing-lg);
+    background: var(--color-bg-primary);
+    border-bottom: 1px solid var(--color-border);
+    box-shadow: var(--shadow-sm);
+    z-index: var(--z-toolbar);
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.app-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0;
+}
+
+.main-content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* ========== Sidebars ========== */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-width);
+    background: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    z-index: var(--z-sidebar);
+}
+
+.sidebar-left {
+    border-right: 1px solid var(--color-border);
+    border-left: none;
+}
+
+.sidebar-right {
+    border-left: 1px solid var(--color-border);
+    border-right: none;
+}
+
+.sidebar-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+}
+
+.sidebar-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-xs);
+}
+
+.sidebar-subtitle {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.sidebar-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+}
+
+/* ========== Buttons ========== */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+}
+
+.btn:hover {
+    background: var(--color-border);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1976D2;
+}
+
+.btn-secondary {
+    background: var(--color-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #616161;
+}
+
+.btn-accent {
+    background: var(--color-accent);
+    color: white;
+}
+
+.btn-accent:hover {
+    background: #E64A19;
+}
+
+.btn-icon {
+    padding: var(--spacing-sm);
+    min-width: 32px;
+    justify-content: center;
+}
+
+.btn-icon .btn-icon {
+    margin: 0;
+}
+
+/* ========== Info Box ========== */
+.info-box {
+    padding: var(--spacing-md);
+    background: #E3F2FD;
+    border-left: 3px solid var(--color-primary);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.info-box strong {
+    font-weight: 600;
+}
+
+/* ========== Empty State ========== */
+.empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+}
+
+/* ========== Panel Sections ========== */
+.panel-section {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.panel-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+/* ========== Scrollbar Styling ========== */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+
+/* ========== Utility Classes ========== */
+.hidden {
+    display: none !important;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.mt-sm { margin-top: var(--spacing-sm); }
+.mt-md { margin-top: var(--spacing-md); }
+.mt-lg { margin-top: var(--spacing-lg); }
+
+.mb-sm { margin-bottom: var(--spacing-sm); }
+.mb-md { margin-bottom: var(--spacing-md); }
+.mb-lg { margin-bottom: var(--spacing-lg); }
+
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }

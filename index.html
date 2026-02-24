@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Financial Crime Nesting Flow Simulator</title>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/canvas.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+
+    <!-- External Libraries -->
+    <script src="lib/jsplumb.min.js"></script>
+    <script src="lib/chart.min.js"></script>
+    <script src="lib/html2canvas.min.js"></script>
+    <script src="lib/jspdf.min.js"></script>
+    <script src="lib/lz-string.min.js"></script>
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div id="app" class="app-container">
+
+        <!-- Top Toolbar -->
+        <div id="toolbar" class="toolbar">
+            <div class="toolbar-section toolbar-left">
+                <h1 class="app-title">AML Nesting Flow Simulator</h1>
+            </div>
+            <div class="toolbar-section toolbar-center">
+                <button id="btn-new" class="btn btn-primary" title="New Simulation">
+                    <span class="btn-icon">➕</span> New
+                </button>
+                <button id="btn-save" class="btn btn-primary" title="Save Simulation">
+                    <span class="btn-icon">💾</span> Save
+                </button>
+                <button id="btn-load" class="btn btn-primary" title="Load Simulation">
+                    <span class="btn-icon">📂</span> Load
+                </button>
+                <button id="btn-export-json" class="btn btn-secondary" title="Export as JSON">
+                    <span class="btn-icon">📄</span> Export JSON
+                </button>
+                <button id="btn-export-pdf" class="btn btn-secondary" title="Export as PDF">
+                    <span class="btn-icon">📑</span> Export PDF
+                </button>
+                <button id="btn-analyze" class="btn btn-accent" title="Analyze Risk & Patterns">
+                    <span class="btn-icon">🔍</span> Analyze
+                </button>
+            </div>
+            <div class="toolbar-section toolbar-right">
+                <button id="btn-learn" class="btn btn-secondary" title="About this app">
+                    <span class="btn-icon">📖</span> Learn
+                </button>
+                <button id="btn-help" class="btn btn-secondary" title="Help & Tutorial">
+                    <span class="btn-icon">❓</span> Help
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+
+            <!-- Left Sidebar: Entity Palette -->
+            <div id="entity-palette" class="sidebar sidebar-left">
+                <div class="sidebar-header">
+                    <h2>Entity Types</h2>
+                    <p class="sidebar-subtitle">Drag to canvas</p>
+                </div>
+                <div class="sidebar-content">
+                    <div id="palette-items" class="palette-items">
+                        <!-- Entity palette items will be populated by JavaScript -->
+                    </div>
+                </div>
+                <div class="sidebar-footer">
+                    <div class="info-box">
+                        <strong>Tip:</strong> Drag entity types onto the canvas to create nodes. Connect them to show money flow.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center: Flow Canvas -->
+            <div id="canvas-container" class="canvas-container">
+                <div class="canvas-header">
+                    <div class="simulation-info">
+                        <input type="text" id="simulation-name" class="simulation-name-input" placeholder="Untitled Simulation" />
+                        <span class="simulation-stats">
+                            <span id="entity-count">0 entities</span> •
+                            <span id="transaction-count">0 transactions</span>
+                        </span>
+                    </div>
+                    <div class="canvas-controls">
+                        <button id="btn-zoom-in" class="btn btn-icon" title="Zoom In">➕</button>
+                        <button id="btn-zoom-out" class="btn btn-icon" title="Zoom Out">➖</button>
+                        <button id="btn-zoom-reset" class="btn btn-icon" title="Reset Zoom">🔄</button>
+                        <button id="btn-fit-view" class="btn btn-icon" title="Fit to View">⛶</button>
+                    </div>
+                </div>
+
+                <div id="flow-canvas" class="flow-canvas">
+                    <!-- Entity nodes and connections will be rendered here -->
+                    <div id="canvas-grid" class="canvas-grid"></div>
+                    <div id="nodes-container" class="nodes-container"></div>
+                </div>
+
+                <div class="canvas-legend">
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #F44336;"></span>
+                        <span class="legend-label">Placement</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #FF9800;"></span>
+                        <span class="legend-label">Layering</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: #4CAF50;"></span>
+                        <span class="legend-label">Integration</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Property Panel -->
+            <div id="property-panel" class="sidebar sidebar-right">
+                <div class="sidebar-header">
+                    <h2>Properties</h2>
+                </div>
+                <div class="sidebar-content">
+                    <div id="property-content" class="property-content">
+                        <div class="empty-state">
+                            <p>Select an entity or transaction to view properties</p>
+                        </div>
+                    </div>
+
+                    <!-- Risk Analysis Section -->
+                    <div id="risk-analysis" class="panel-section">
+                        <h3>Risk Analysis</h3>
+                        <div id="overall-risk" class="overall-risk">
+                            <div class="risk-meter-container">
+                                <div class="risk-meter">
+                                    <div class="risk-meter-fill" style="width: 0%"></div>
+                                </div>
+                                <div class="risk-score">0</div>
+                            </div>
+                            <div class="risk-label">No Risk Calculated</div>
+                        </div>
+                        <div id="top-risks" class="top-risks">
+                            <!-- Top risk entities will be listed here -->
+                        </div>
+                    </div>
+
+                    <!-- Pattern Detection Section -->
+                    <div id="pattern-detection" class="panel-section">
+                        <h3>Detected Patterns</h3>
+                        <div id="detected-patterns" class="detected-patterns">
+                            <div class="no-patterns">No analysis run yet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom: Timeline Player -->
+        <div id="timeline-player" class="timeline-player">
+            <div class="timeline-controls">
+                <button id="btn-play" class="btn btn-icon" title="Play">▶</button>
+                <button id="btn-pause" class="btn btn-icon" title="Pause" style="display: none;">⏸</button>
+                <button id="btn-stop" class="btn btn-icon" title="Stop">⏹</button>
+                <button id="btn-step-back" class="btn btn-icon" title="Step Backward">⏮</button>
+                <button id="btn-step-forward" class="btn btn-icon" title="Step Forward">⏭</button>
+
+                <div class="speed-control">
+                    <label>Speed:</label>
+                    <select id="playback-speed" class="speed-select">
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1x</option>
+                        <option value="2">2x</option>
+                        <option value="4">4x</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="timeline-progress">
+                <input type="range" id="timeline-scrubber" class="timeline-scrubber" min="0" max="100" value="0" />
+                <div class="timeline-info">
+                    <span id="timeline-current">0</span> / <span id="timeline-total">0</span> transactions
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Load Simulation Modal -->
+    <div id="load-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Load Simulation</h2>
+                <button class="modal-close" data-modal="load-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="simulation-list" class="simulation-list">
+                    <!-- Saved simulations will be listed here -->
+                </div>
+                <div class="modal-divider">OR</div>
+                <div class="file-upload-area">
+                    <label for="file-import" class="file-upload-label">
+                        <span class="btn-icon">📁</span> Import from File
+                    </label>
+                    <input type="file" id="file-import" accept=".json" style="display: none;" />
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Help & Tutorial</h2>
+                <button class="modal-close" data-modal="help-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-content">
+                    <h3>Getting Started</h3>
+                    <ol>
+                        <li><strong>Create Entities:</strong> Drag entity types from the left palette onto the canvas.</li>
+                        <li><strong>Connect Entities:</strong> Click on a source entity, then click on a target entity to create a transaction.</li>
+                        <li><strong>Edit Properties:</strong> Click on any entity to view and edit its properties in the right panel.</li>
+                        <li><strong>Analyze:</strong> Click the "Analyze" button to calculate risk scores and detect patterns.</li>
+                        <li><strong>Playback:</strong> Use the timeline controls at the bottom to animate transaction flows.</li>
+                    </ol>
+
+                    <h3>Entity Types</h3>
+                    <ul>
+                        <li><strong>Originator:</strong> Source of illicit funds (Placement stage)</li>
+                        <li><strong>Shell Company:</strong> Company with no real operations (Layering stage)</li>
+                        <li><strong>Correspondent Bank:</strong> Bank facilitating international transfers</li>
+                        <li><strong>Nominee Account:</strong> Account held in another person's name (Layering stage)</li>
+                        <li><strong>Crypto Exchange:</strong> Cryptocurrency conversion (Layering stage)</li>
+                        <li><strong>Cash Business:</strong> Cash-intensive business (Integration stage)</li>
+                        <li><strong>Final Beneficiary:</strong> Ultimate recipient (Integration stage)</li>
+                    </ul>
+
+                    <h3>Pattern Detection</h3>
+                    <p>The simulator can automatically detect common money laundering patterns:</p>
+                    <ul>
+                        <li><strong>Smurfing:</strong> Multiple small transactions to avoid reporting thresholds</li>
+                        <li><strong>Round-Tripping:</strong> Funds returning to origin after layering</li>
+                        <li><strong>Rapid Movement:</strong> Quick succession of transfers through entities</li>
+                        <li><strong>Layering Complexity:</strong> Complex networks with many intermediaries</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learn Modal -->
+    <div id="learn-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 760px;">
+            <div class="modal-header">
+                <h2>📖 About the AML Nesting Flow Simulator</h2>
+                <button class="modal-close" data-modal="learn-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="help-content">
+
+                    <p style="font-size:14px;line-height:1.7;margin-bottom:16px">
+                        The <strong>AML Nesting Flow Simulator</strong> is an interactive, browser-based tool for visualising,
+                        constructing, and analysing money laundering scenarios. It enables analysts, compliance officers,
+                        investigators, and trainees to build financial crime flow diagrams, detect suspicious patterns
+                        automatically, and score entity risk — all without any backend or installation required.
+                    </p>
+
+                    <h3>Canvas &amp; Entity Management</h3>
+                    <ul>
+                        <li><strong>17 entity types</strong> available in the left palette: Originator, Shell Company, Correspondent Bank, Nominee Account, Crypto Exchange, Cash Business, Final Beneficiary, Trade Company, Real Estate, Offshore Trust, Money Service Business, Professional Service Provider, Casino, Precious Metals Dealer, Investment Fund, Merchant, and NPM FINTECH</li>
+                        <li><strong>Drag-and-drop</strong> entities from the palette onto the canvas, or <strong>double-click</strong> to place them at the centre</li>
+                        <li><strong>Freely reposition</strong> entities by dragging them anywhere on the 5 000 × 5 000 virtual canvas</li>
+                        <li><strong>Pan</strong> the canvas by clicking and dragging empty space; <strong>zoom</strong> in and out with the toolbar buttons</li>
+                        <li>Each entity node displays its icon, name, type, jurisdiction, AML stage badge, and risk score</li>
+                    </ul>
+
+                    <h3>Transaction Lines</h3>
+                    <ul>
+                        <li><strong>Click-to-connect:</strong> click entity A then entity B to draw a directed payment line with an arrow</li>
+                        <li>Lines use <strong>smart auto-routing</strong> with continuous anchors to avoid overlap</li>
+                        <li>Each line shows a <strong>currency denomination label</strong> at its midpoint</li>
+                        <li>Lines are <strong>colour-coded</strong> by flags and method:
+                            <ul style="margin-top:4px">
+                                <li>🔵 <strong>Blue</strong> — cross-border transaction</li>
+                                <li>🟣 <strong>Purple dashed</strong> — on-behalf transaction</li>
+                                <li>🔷 <strong>Dark blue dashed</strong> — both cross-border and on-behalf</li>
+                                <li>🔴 <strong>Red dashed</strong> — suspicious (overrides other colours)</li>
+                            </ul>
+                        </li>
+                        <li>Click a line to select it and view or edit its properties in the right panel</li>
+                    </ul>
+
+                    <h3>Property Panel</h3>
+                    <p><strong>Entity properties:</strong> name, type, jurisdiction, AML stage, notes, risk score meter with factor breakdown, and Connect / Save / Delete actions.</p>
+                    <p><strong>Transaction properties:</strong> currency, payment method (Wire Transfer, Cash, Crypto, Check, Trade Invoice), description, cross-border flag, on-behalf flag with entity dropdown, and Save / Delete actions.</p>
+
+                    <h3>Risk Analysis</h3>
+                    <ul>
+                        <li>Press <strong>Analyze</strong> to compute an overall risk score (0–100) rated Low / Medium / High / Critical</li>
+                        <li>The <strong>Top 5 riskiest entities</strong> are ranked with their score and top contributing factors</li>
+                        <li>Risk factors include entity type base risk, jurisdiction risk, transaction volume, suspicious flags, and AML stage weighting</li>
+                    </ul>
+
+                    <h3>Pattern Detection</h3>
+                    <p>Eight AML patterns are detected automatically after running Analyze:</p>
+                    <ul>
+                        <li>🐢 <strong>Smurfing</strong> — multiple sub-threshold transactions from one source</li>
+                        <li>🔄 <strong>Round-Tripping</strong> — funds that circulate back to the originator via a cycle</li>
+                        <li>⚡ <strong>Rapid Movement Chain</strong> — 3+ linked transfers within a short time window</li>
+                        <li>🕸️ <strong>Complex Layering Network</strong> — 5+ entities across multiple jurisdictions with heavy shell company use</li>
+                        <li>🚢 <strong>Trade-Based Money Laundering</strong> — import/export entities with suspicious invoice flows</li>
+                        <li>🐦 <strong>Cuckoo Smurfing</strong> — 3+ sources depositing sub-threshold amounts to a single target</li>
+                        <li>🌀 <strong>Cryptocurrency Mixing</strong> — crypto exchanges with balanced many-in / many-out flows</li>
+                        <li>🪆 <strong>Nesting Risk</strong> — 2 or more connected correspondent banks, NPM FINTECHs, shell companies, nominee accounts, or offshore trusts forming a layering chain before integration</li>
+                    </ul>
+                    <p>Each detected pattern shows a severity badge, a plain-language description, a <strong>Highlight</strong> button (illuminates involved nodes and lines for 4 seconds), and a <strong>Learn More</strong> button with full educational content including indicators, real-world examples, red flags, prevention, and legal consequences.</p>
+
+                    <h3>Simulation Management</h3>
+                    <ul>
+                        <li><strong>New</strong> — start a fresh simulation</li>
+                        <li><strong>Save / Load</strong> — persist simulations to browser localStorage and reload them by name</li>
+                        <li><strong>Export JSON</strong> — download the full simulation as a JSON file</li>
+                        <li><strong>Export PDF</strong> — export the canvas view as a PDF report</li>
+                        <li><strong>Import</strong> — load a previously exported JSON file</li>
+                    </ul>
+
+                    <h3>Timeline Player</h3>
+                    <ul>
+                        <li>Animate transaction flows step-by-step along the canvas using Play, Pause, Stop, Step Back, and Step Forward controls</li>
+                        <li>Adjustable <strong>playback speed</strong> (0.5×, 1×, 2×, 4×)</li>
+                        <li>A scrubber bar for navigating to any point in the transaction sequence</li>
+                    </ul>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pattern Education Modal -->
+    <div id="pattern-education-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="pattern-education-title">Pattern Details</h2>
+                <button class="modal-close" data-modal="pattern-education-modal">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="pattern-education-content" class="pattern-education-content">
+                    <!-- Pattern education content will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Entry Point -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
