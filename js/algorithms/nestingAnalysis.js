@@ -67,7 +67,9 @@ export function classifyNestingType(entities, transactions, hopMap) {
     const doubleChains = detectDoubleNestingChains(entities, transactions, hopMap);
     if (doubleChains.length > 0) return 'double';
 
-    const hasAffiliate = entities.some(e => e.type === 'affiliate');
+    // Affiliate only counts if the entity is actually connected in the transaction graph.
+    const txEntityIds = new Set(transactions.flatMap(tx => [tx.sourceId, tx.targetId]));
+    const hasAffiliate = entities.some(e => e.type === 'affiliate' && txEntityIds.has(e.id));
     if (hasAffiliate) return 'affiliate';
 
     // Primary: bank→npm_fintech→nested_fi→end_customer
@@ -113,9 +115,11 @@ export function detectImpermissiblePairs(entities, transactions) {
  * Returns array of entity-ID arrays (connected subgraphs at hop >= 3).
  */
 export function detectDoubleNestingChains(entities, transactions, hopMap) {
+    // Infinity hop (unreachable from any BANK anchor) must NOT be treated as double-nesting.
+    // Only finite hop distances >= 3 qualify.
     const doubleIds = new Set(
         entities
-            .filter(e => (hopMap.get(e.id) ?? Infinity) >= 3)
+            .filter(e => { const h = hopMap.get(e.id) ?? Infinity; return isFinite(h) && h >= 3; })
             .map(e => e.id)
     );
     if (doubleIds.size === 0) return [];
@@ -158,7 +162,12 @@ export function detectAffiliateFlow(entities, transactions) {
     const affiliates = entities.filter(e => e.type === 'affiliate');
     if (affiliates.length === 0) return { hasAffiliate: false, affiliateChains: [] };
 
-    const affiliateIds = new Set(affiliates.map(e => e.id));
+    // Only consider affiliates that participate in at least one transaction.
+    const txEntityIds = new Set(transactions.flatMap(tx => [tx.sourceId, tx.targetId]));
+    const connectedAffiliates = affiliates.filter(e => txEntityIds.has(e.id));
+    if (connectedAffiliates.length === 0) return { hasAffiliate: false, affiliateChains: [] };
+
+    const affiliateIds = new Set(connectedAffiliates.map(e => e.id));
     const chains       = [];
     const visited      = new Set();
 
@@ -364,8 +373,8 @@ export function runNestingAnalysis(simulation) {
     );
     const nestingType = classifyNestingType(entities, transactions, hopMap);
 
-    // CDD gap count: entities at hop >= 2
-    const cddGapCount = entities.filter(e => (hopMap.get(e.id) ?? Infinity) >= 2 && hopMap.get(e.id) !== Infinity).length;
+    // CDD gap count: entities at a finite hop >= 2 (unreachable entities excluded)
+    const cddGapCount = entities.filter(e => { const h = hopMap.get(e.id) ?? Infinity; return isFinite(h) && h >= 2; }).length;
 
     const result = {
         hopMap,
