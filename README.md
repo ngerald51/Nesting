@@ -1,9 +1,5 @@
 # AML Nesting Flow Simulator — Cheatsheet
 
----
-
-## PAGE 1 — Core Concepts & Quick Start
-
 ### What It Is
 A browser-based educational tool for building, visualising, and analysing AML (Anti-Money Laundering) transaction flow diagrams. Runs entirely in the browser — no server, no build step.
 
@@ -66,7 +62,7 @@ A browser-based educational tool for building, visualising, and analysing AML (A
 
 ---
 
-## PAGE 2 — Nesting Analysis & Risk Scoring
+## Nesting Analysis & Risk Scoring
 
 ### Nesting Analysis — Core Concept
 Nesting = a bank (`hop 0`) providing services to entities through intermediaries. The further an entity is from a BANK anchor, the higher the CDD gap risk.
@@ -163,7 +159,7 @@ Entities unreachable from any BANK → hop ∞
 
 ---
 
-## PAGE 3 — Patterns, Data Models & Architecture
+## Patterns, Data Models & Architecture
 
 ### 13 Detected Patterns
 
