@@ -1,6 +1,5 @@
 # AML Nesting Flow Simulator
 
-### What It Is
 A browser-based educational tool for building, visualising, and analysing AML (Anti-Money Laundering) transaction flow diagrams. Runs entirely in the browser — no server, no build step.
 
 An educational tool for financial crime investigators to visualize and understand money laundering patterns through interactive simulation of transaction flows between entities.
