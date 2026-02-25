@@ -31,28 +31,28 @@ A browser-based educational tool for building, visualising, and analysing AML (A
 | Delete entity | Property Panel or keyboard; removes all linked transactions |
 
 ### All 20 Entity Types
-| Icon | Entity | Base Risk | AML Stage |
-|------|--------|-----------|-----------|
-| 👤 | Originator | 30 | Placement |
-| 💱 | Money Service Business | 55 | Placement |
-| 🏪 | Cash Business | 70 | Integration |
-| 🏢 | Shell Company | **90** | Layering |
-| 👥 | Nominee Account | **85** | Layering |
-| ₿ | Crypto Exchange | 60 | Layering |
-| 📦 | Trade Company | 75 | Layering |
-| 🏝️ | Offshore Trust | **88** | Layering |
-| 💼 | Professional Service | 45 | Layering |
-| 💎 | Precious Metals Dealer | 68 | Layering |
-| 💻 | NPM FINTECH | 50 | Layering |
-| 🎯 | Final Beneficiary | 30 | Integration |
-| 🏠 | Real Estate | 65 | Integration |
-| 🎰 | Casino | 72 | Integration |
-| 📈 | Investment Fund | 58 | Integration |
-| 🛒 | Merchant | 35 | Integration |
-| 🏦 | Correspondent Bank | 20 | — |
-| 🏛️ | Bank (Anchor) | **15** | — |
-| 🔗 | Affiliate Entity | 40 | — |
-| 🧑‍💼 | End Customer | 20 | — |
+| Icon | Entity | Base Risk |
+|------|--------|-----------|
+| 👤 | Originator | 30 |
+| 💱 | Money Service Business | 55 |
+| 🏪 | Cash Business | 70 |
+| 🏢 | Shell Company | **90** |
+| 👥 | Nominee Account | **85** |
+| ₿ | Crypto Exchange | 60 |
+| 📦 | Trade Company | 75 |
+| 🏝️ | Offshore Trust | **88** |
+| 💼 | Professional Service | 45 |
+| 💎 | Precious Metals Dealer | 68 |
+| 💻 | NPM FINTECH | 50 |
+| 🎯 | Final Beneficiary | 30 |
+| 🏠 | Real Estate | 65 |
+| 🎰 | Casino | 72 |
+| 📈 | Investment Fund | 58 |
+| 🛒 | Merchant | 35 |
+| 🏦 | Correspondent Bank | 20 |
+| 🏛️ | Bank (Anchor) | **15** | 
+| 🔗 | Affiliate Entity | 40 | 
+| 🧑‍💼 | End Customer | 20 |
 
 ### Payment Methods
 `wire_transfer` · `cash` · `crypto` · `check` · `trade`
