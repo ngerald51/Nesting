@@ -30,16 +30,11 @@ class EntityPalette {
             item.dataset.type   = typeDef.id;
             item.title          = typeDef.tooltip || typeDef.description;
 
-            const stageLabel = typeDef.amlStage
-                ? `<span class="palette-item-stage ${typeDef.amlStage}">${_cap(typeDef.amlStage)}</span>`
-                : '';
-
             item.innerHTML = `
               <span class="palette-item-icon">${typeDef.icon}</span>
               <div class="palette-item-info">
                 <div class="palette-item-name">${typeDef.name}</div>
                 <div class="palette-item-description">${typeDef.description}</div>
-                ${stageLabel}
               </div>
             `;
 

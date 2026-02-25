@@ -3,20 +3,22 @@
  * Initialises all components and wires them together
  */
 
-import Canvas           from './core/Canvas.js';
-import NodeManager      from './core/NodeManager.js';
-import ConnectionManager from './core/ConnectionManager.js';
-import stateManager     from './core/StateManager.js';
+import Canvas             from './core/Canvas.js';
+import NodeManager        from './core/NodeManager.js';
+import ConnectionManager  from './core/ConnectionManager.js';
+import stateManager       from './core/StateManager.js';
 
-import EntityPalette    from './components/EntityPalette.js';
-import PropertyPanel    from './components/PropertyPanel.js';
-import TimelinePlayer   from './components/TimelinePlayer.js';
-import RiskAnalyzer     from './components/RiskAnalyzer.js';
-import PatternDetector  from './components/PatternDetector.js';
-import ExportManager    from './components/ExportManager.js';
-import Toolbar          from './components/Toolbar.js';
+import EntityPalette      from './components/EntityPalette.js';
+import PropertyPanel      from './components/PropertyPanel.js';
+import TimelinePlayer     from './components/TimelinePlayer.js';
+import RiskAnalyzer       from './components/RiskAnalyzer.js';
+import PatternDetector    from './components/PatternDetector.js';
+import ExportManager      from './components/ExportManager.js';
+import Toolbar            from './components/Toolbar.js';
+import NestingSummaryPanel from './components/NestingSummaryPanel.js';
+import AffiliateWorkflow  from './components/AffiliateWorkflow.js';
 
-import storageManager   from './utils/storage.js';
+import storageManager     from './utils/storage.js';
 
 // ── Boot ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +34,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Analysis components (register listeners before simulation loads)
     const riskAnalyzer     = new RiskAnalyzer();
     const patternDetector  = new PatternDetector(nodeManager, connectionManager);
+
+    // Nesting analysis components (register before simulation loads)
+    const nestingSummaryPanel = new NestingSummaryPanel();
+    const affiliateWorkflow   = new AffiliateWorkflow();
+
+    // Expose stateManager globally for NestingSummaryPanel's lazy helper
+    window._stateManager = stateManager;
 
     // Interaction components
     const entityPalette  = new EntityPalette(canvas, nodeManager);

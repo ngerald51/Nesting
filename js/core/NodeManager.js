@@ -32,6 +32,9 @@ class NodeManager {
         eventBus.on(Events.ENTITY_SELECTED,(e)    => this._highlightSelected(e?.id));
         eventBus.on(Events.SIMULATION_LOADED, ()  => this._reloadAll());
         eventBus.on(Events.ANALYSIS_COMPLETED, () => this._refreshRiskBadges());
+        eventBus.on(Events.NESTING_ANALYSIS_COMPLETED, () =>
+            stateManager.getAllEntities().forEach(e => this.updateNode(e))
+        );
     }
 
     /* ── Rendering ────────────────────────────────────── */
@@ -125,15 +128,23 @@ class NodeManager {
     /* ── HTML builder ─────────────────────────────────── */
 
     _buildNodeHTML(entity) {
-        const typeDef = getEntityType(entity.type) || { icon: '❓', name: entity.type };
-        const jur     = getJurisdiction(entity.jurisdiction);
-        const flag    = jur ? jur.getFlagEmoji() : '🏳';
+        const typeDef   = getEntityType(entity.type) || { icon: '❓', name: entity.type };
+        const jur       = getJurisdiction(entity.jurisdiction);
+        const flag      = jur ? jur.getFlagEmoji() : '🏳';
         const fatfColor = jur ? jur.getFATFColor() : '#9E9E9E';
-        const stage   = entity.amlStage || 'none';
-        const stageColor = Config.colors.stages[stage] || Config.colors.stages.none;
+
+        const hop = entity.hopDistance;
+        const hopFinite = (hop !== null && hop !== undefined && hop !== Infinity);
+        const hopClass  = hopFinite ? `hop-${Math.min(hop, 3)}` : '';
+
+        const permLabel = {
+            permissible:     '✅ Permissible',
+            impermissible:   '🚫 Impermissible',
+            review_required: '⚠ Review Required'
+        }[entity.permissibilityStatus] || '';
 
         return `
-          <div class="node-header" style="border-top: 3px solid ${stageColor}">
+          <div class="node-header">
             <span class="node-icon">${typeDef.icon}</span>
             <div class="node-title">
               <div class="node-name">${_esc(entity.name)}</div>
@@ -147,13 +158,12 @@ class NodeManager {
               <span class="node-field-label">Jurisdiction</span>
               <span class="node-field-value">${entity.jurisdiction}</span>
             </div>
-            <div class="node-field">
-              <span class="node-field-label">Stage</span>
-              <span class="node-field-value" style="color:${stageColor}">${_cap(stage)}</span>
-            </div>
+            ${entity.isBank ? '<div class="bank-anchor-badge">🏛 BANK ANCHOR</div>' : ''}
+            ${hopFinite ? `<div class="hop-badge ${hopClass}">Hop ${hop}</div>` : ''}
+            ${entity.cddGap ? '<div class="cdd-gap-badge">CDD Gap ⚠️</div>' : ''}
+            ${permLabel ? `<div class="permissibility-badge permissibility-${entity.permissibilityStatus}">${permLabel}</div>` : ''}
           </div>
           <div class="risk-badge risk-${entity.riskLevel || 'low'}">${entity.riskScore || ''}</div>
-          <div class="aml-stage-indicator aml-stage-${stage}"></div>
         `;
     }
 

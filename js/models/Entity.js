@@ -33,6 +33,15 @@ export class Entity {
             outgoing: config.connections?.outgoing || []
         };
 
+        // Nesting analysis fields
+        this.isBank              = config.isBank              || false;
+        this.hopDistance         = config.hopDistance         ?? null;
+        this.cddGap              = config.cddGap              || false;
+        this.sameGroupAmlCtf     = config.sameGroupAmlCtf     || false;
+        this.npmBusinessModel    = config.npmBusinessModel    || null;
+        this.permissibilityStatus= config.permissibilityStatus|| null;
+        this.nestingRole         = config.nestingRole         || null;
+
         // UI state
         this.selected = false;
         this.highlighted = false;
@@ -148,7 +157,14 @@ export class Entity {
             connections: {
                 incoming: [...this.connections.incoming],
                 outgoing: [...this.connections.outgoing]
-            }
+            },
+            isBank:               this.isBank,
+            hopDistance:          this.hopDistance,
+            cddGap:               this.cddGap,
+            sameGroupAmlCtf:      this.sameGroupAmlCtf,
+            npmBusinessModel:     this.npmBusinessModel,
+            permissibilityStatus: this.permissibilityStatus,
+            nestingRole:          this.nestingRole
         };
     }
 

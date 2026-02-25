@@ -238,6 +238,157 @@ export const patternDefinitions = {
         ]
     },
 
+    primary_nesting: {
+        id: 'primary_nesting',
+        name: 'Primary Nesting',
+        icon: '🪆',
+        description: 'A standard nesting arrangement where the bank provides services to an NPM, which in turn serves a nested financial institution that ultimately serves end customers.',
+        severity: 'medium',
+        indicators: [
+            'Bank → NPM FINTECH → Nested FI → End Customer chain present',
+            'NPM FINTECH acting as intermediary between bank and downstream FI',
+            'End customers accessing services through multiple intermediary layers',
+            'CDD performed at NPM level but potentially not at nested FI level',
+            'Transaction flows following hop 0 (bank) → hop 1 (NPM) → hop 2 (nested FI) → hop 3 (customer) pattern'
+        ],
+        realWorldExample: 'A regional bank provides correspondent services to an NPM fintech, which in turn offers payment rails to a smaller digital wallet provider. The wallet provider\'s end customers are transacting without the bank having direct visibility or CDD on them.',
+        detection: {
+            algorithm: 'BFS from BANK anchor detecting BANK→NPM→NestedFI→EndCustomer sequence via hop distances',
+            hopThreshold: 3,
+            requiredTypes: ['bank', 'npm_fintech']
+        },
+        prevention: 'Enhanced due diligence at each layer; flow-through testing of CDD standards from bank through NPM to nested FI.',
+        legalConsequences: 'Permissible if CDD standards flow through the chain. Failure to maintain adequate CDD at nested layers can result in regulatory sanctions.',
+        redFlags: [
+            'NPM unable to evidence CDD performed on nested FI customers',
+            'Transaction volumes inconsistent with disclosed customer base',
+            'Multiple nested FIs under a single NPM with limited oversight',
+            'Lack of contractual obligations flowing CDD requirements downstream',
+            'End customers in high-risk jurisdictions not flagged by NPM'
+        ]
+    },
+
+    affiliate_nesting: {
+        id: 'affiliate_nesting',
+        name: 'Affiliate Nesting',
+        icon: '🔗',
+        description: 'An affiliate entity within the same group or ownership structure is providing services to or through the main entity, creating a parallel nesting channel that may operate under different AML/CTF standards.',
+        severity: 'high',
+        indicators: [
+            'Affiliate-type entity connected within the transaction network',
+            'Affiliate operating in a different jurisdiction from the principal entity',
+            'Transactions flowing through affiliate without confirmed DD status',
+            'Affiliate entity not flagged as sameGroupAmlCtf compliant',
+            'Parallel transaction channels through affiliated and non-affiliated entities'
+        ],
+        realWorldExample: 'A bank\'s affiliate payment company in Southeast Asia processes transactions on behalf of the bank\'s European NPM clients. The affiliate operates under a less stringent local regulatory regime, creating a gap in the overall AML/CTF framework.',
+        detection: {
+            algorithm: 'Detect affiliate-type entities in transaction network; check DD confirmation status',
+            affiliateType: 'affiliate',
+            requiresDDConfirmation: true
+        },
+        prevention: 'Enhanced affiliate due diligence (DD) confirmation workflows; group-wide AML/CTF policy harmonisation.',
+        legalConsequences: 'Affiliate nesting without confirmed DD can constitute a regulatory breach, potentially resulting in enforcement action against the principal entity for its affiliate\'s failures.',
+        redFlags: [
+            'Affiliate entity lacks documented DD confirmation',
+            'Affiliate in a jurisdiction with weaker AML/CTF standards',
+            'Group AML/CTF policy does not explicitly cover affiliate activities',
+            'Transaction flows cannot be attributed to specific end customers',
+            'Affiliate volume growing faster than documented customer base'
+        ]
+    },
+
+    double_nesting: {
+        id: 'double_nesting',
+        name: 'Double Nesting',
+        icon: '🪆🪆',
+        description: 'A nesting chain extending 3 or more hops from the BANK anchor, indicating that services are being provided through two or more layers of intermediaries before reaching end customers. This dramatically increases the CDD gap risk.',
+        severity: 'critical',
+        indicators: [
+            'Entity at hop distance 3 or greater from BANK anchor',
+            'Two or more NPM/correspondent bank layers between BANK and end customer',
+            'CDD gap progressively widening at each additional hop',
+            'Bank has no direct contractual relationship with entities beyond hop 2',
+            'Regulatory visibility of end customers approaches zero beyond hop 3'
+        ],
+        realWorldExample: 'Bank A provides services to NPM B (hop 1), which sub-contracts to regional NPM C (hop 2), which further delegates to local payment agent D (hop 3). Bank A has no visibility whatsoever into the customers of agent D, creating a severe regulatory and reputational risk.',
+        detection: {
+            algorithm: 'BFS from BANK anchor; flag any entity with hopDistance >= 3',
+            hopThreshold: 3,
+            exception: 'sameGroupAmlCtf flag on entities makes double nesting permissible'
+        },
+        prevention: 'Contractual prohibition on sub-nesting beyond one layer; mandatory notification and approval for any sub-nesting arrangement.',
+        legalConsequences: 'Double nesting without explicit regulatory approval or same-group AML/CTF exception is generally impermissible. Consequences include termination of banking relationships, significant fines, and potential criminal liability.',
+        redFlags: [
+            'Discovery of sub-nesting arrangements not disclosed to principal bank',
+            'Entities at hop 3+ with no direct regulatory relationship with the bank',
+            'CDD documentation that cannot be traced to actual end customers',
+            'Increasing transaction volumes at distal hops without corresponding customer growth',
+            'Entities at hop 3+ in high-risk or sanctioned jurisdictions'
+        ]
+    },
+
+    impermissible_nesting: {
+        id: 'impermissible_nesting',
+        name: 'Impermissible Nesting',
+        icon: '🚫',
+        description: 'A transaction connecting an NPM FINTECH or bank entity directly with a Money Service Business — a combination that is categorically impermissible under most regulatory frameworks due to the compounded risk of two high-risk payment channels.',
+        severity: 'critical',
+        indicators: [
+            'Direct transaction between NPM FINTECH and Money Service Business',
+            'Direct transaction between Bank and Money Service Business in a nesting context',
+            'Transaction flagged as impermissible by real-time detection',
+            'Connection colour shows dark red with dashed style',
+            'Impermissible banner displayed on canvas within 500ms of connection creation'
+        ],
+        realWorldExample: 'An NPM fintech platform accepts a Money Service Business (hawala operator) as a customer, allowing the MSB to process transfers through the NPM\'s payment rails. This creates a double layer of unregulated or loosely regulated payment flow that regulators in most jurisdictions have explicitly prohibited.',
+        detection: {
+            algorithm: 'Real-time: detect any transaction where one endpoint is npm_fintech/bank and other is money_service_business',
+            impermissiblePair: ['npm_fintech', 'money_service_business'],
+            realTime: true,
+            debounceMs: 500
+        },
+        prevention: 'Automated counterparty screening to block MSB onboarding to NPM platforms; enhanced due diligence for any MSB-adjacent transaction.',
+        legalConsequences: 'Impermissible nesting is a serious regulatory breach. Consequences typically include immediate account termination, mandatory SAR filing, significant fines, and potential loss of operating licence for the NPM.',
+        redFlags: [
+            'Customer entity type identified as money_service_business',
+            'Transaction purpose references remittance, currency exchange, or cash services',
+            'Customer operating in multiple jurisdictions without correspondent banking relationships',
+            'Unusually high transaction volumes for a payment services customer',
+            'Customer unable to provide regulatory licence documentation'
+        ]
+    },
+
+    multi_npm_same_customer: {
+        id: 'multi_npm_same_customer',
+        name: 'Multi-NPM Same Customer Overlap',
+        icon: '⚠️',
+        description: 'The same downstream customer or customer cluster is being served by two or more NPM FINTECH entities, creating a fragmented oversight picture and potential for regulatory arbitrage across NPM compliance programmes.',
+        severity: 'high',
+        indicators: [
+            'Two or more NPM FINTECH entities share a common downstream entity within 2 hops',
+            'Downstream entity appears in multiple NPM transaction chains',
+            'Total transaction volume across NPMs exceeds what a single customer relationship would justify',
+            'NPMs in different jurisdictions serving the same customer without coordinated CDD',
+            'No disclosure between NPMs of the shared customer relationship'
+        ],
+        realWorldExample: 'A corporate group maintains payment accounts with three different NPM fintech providers simultaneously, using each for different currencies or corridors. None of the NPMs is aware of the others, resulting in fragmented KYC/CDD and making it impossible to assess the true total volume or risk profile of the customer.',
+        detection: {
+            algorithm: '2-hop downstream BFS per npm_fintech; entities appearing in 2+ NPM downstream clusters form a multi-NPM overlap',
+            minNpms: 2,
+            bfsHops: 2
+        },
+        prevention: 'Industry-wide customer deduplication mechanisms; mandatory disclosure requirements for customers maintaining multiple NPM relationships.',
+        legalConsequences: 'While not automatically illegal, multi-NPM arrangements enable regulatory arbitrage and can be used to circumvent transaction monitoring thresholds. Regulators increasingly require disclosure and consolidated CDD for such arrangements.',
+        redFlags: [
+            'Customer maintaining accounts with 2+ NPMs simultaneously',
+            'Transaction volumes at individual NPMs appear normal but aggregate is suspicious',
+            'Customer using different NPMs for different currencies to obscure total flow',
+            'NPMs in the same group unaware of each other\'s relationship with the customer',
+            'Customer entity is itself an NPM or financial intermediary'
+        ]
+    },
+
     crypto_mixing: {
         id: 'crypto_mixing',
         name: 'Cryptocurrency Mixing',

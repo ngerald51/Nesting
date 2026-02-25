@@ -22,7 +22,8 @@ export function scoreEntity(entity, simulation) {
         calcEntityTypeFactor(entity),
         calcTransactionVolumeFactor(entity, transactions),
         calcNetworkFactor(entity, entities, transactions),
-        calcPatternFactor(entity, simulation.metadata.detectedPatterns || [])
+        calcPatternFactor(entity, simulation.metadata.detectedPatterns || []),
+        calcHopDistanceFactor(entity)
     ];
 
     const overallScore = factors.reduce((sum, f) => sum + f.raw * f.weight, 0);
@@ -178,6 +179,29 @@ function calcPatternFactor(entity, detectedPatterns) {
         weight: W.patternInvolvement,
         description: `Involved in: ${names}`
     };
+}
+
+/**
+ * Hop distance factor (weight: 15%)
+ * Measures structural distance from the BANK anchor.
+ */
+function calcHopDistanceFactor(entity) {
+    const hop = entity.hopDistance;
+    const weight = W.hopDistance ?? 0.15;
+
+    if (hop === null || hop === undefined) {
+        return { category: 'Hop Distance', raw: 0, weight, description: 'No BANK anchor set' };
+    }
+    if (hop === 0) {
+        return { category: 'Hop Distance', raw: 0, weight, description: 'BANK anchor (hop 0)' };
+    }
+    if (hop === 1) {
+        return { category: 'Hop Distance', raw: 20, weight, description: 'Hop 1 — base nesting risk' };
+    }
+    if (hop === 2) {
+        return { category: 'Hop Distance', raw: 55, weight, description: 'Hop 2 — CDD gap risk' };
+    }
+    return { category: 'Hop Distance', raw: 90, weight, description: `Hop ${hop} — double nesting` };
 }
 
 /**

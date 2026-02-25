@@ -19,6 +19,8 @@ export class Transaction {
         this.crossBorder = config.crossBorder || false;
         this.onBehalf = config.onBehalf || false;
         this.onBehalfOf = config.onBehalfOf || '';
+        // Nesting relationship type: 'respondent'|'nested_entity'|'underlying_customer'|'affiliate'
+        this.relationshipType = config.relationshipType || null;
 
         // Analysis results
         this.suspicious = config.suspicious || false;
@@ -153,7 +155,8 @@ export class Transaction {
             onBehalfOf: this.onBehalfOf,
             suspicious: this.suspicious,
             suspicionReasons: [...this.suspicionReasons],
-            riskScore: this.riskScore
+            riskScore: this.riskScore,
+            relationshipType: this.relationshipType
         };
     }
 

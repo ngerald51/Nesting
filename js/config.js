@@ -19,13 +19,19 @@ const Config = {
         nodeMinWidth: 160
     },
 
+    nesting: {
+        impermissibleCheckDebounceMs: 500,
+        doubleNestingHopThreshold: 3   // hop >= 3 = double nesting
+    },
+
     risk: {
         weights: {
-            jurisdiction:        0.30,
-            entityType:          0.25,
-            transactionVolume:   0.20,
-            networkCentrality:   0.15,
-            patternInvolvement:  0.10
+            jurisdiction:        0.25,
+            entityType:          0.20,
+            transactionVolume:   0.18,
+            networkCentrality:   0.12,
+            patternInvolvement:  0.10,
+            hopDistance:         0.15
         },
         thresholds: {
             low:      [0,  30],
@@ -74,10 +80,20 @@ const Config = {
             blacklisted: '#F44336'
         },
         connection: {
-            default:  '#607D8B',
-            active:   '#2196F3',
-            suspect:  '#F44336',
-            animated: '#4CAF50'
+            default:             '#607D8B',
+            active:              '#2196F3',
+            suspect:             '#F44336',
+            animated:            '#4CAF50',
+            respondent:          '#1976D2',
+            nested_entity:       '#7B1FA2',
+            underlying_customer: '#388E3C',
+            affiliate:           '#F57C00'
+        },
+        nesting: {
+            permissible:     '#4CAF50',
+            impermissible:   '#F44336',
+            reviewRequired:  '#FF9800',
+            cddGap:          '#FF5722'
         }
     }
 };

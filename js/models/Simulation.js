@@ -47,6 +47,7 @@ export class Simulation {
             detectedPatterns: config.metadata?.detectedPatterns || [],
             overallRiskScore: config.metadata?.overallRiskScore || 0,
             tags: config.metadata?.tags || [],
+            nestingAnalysis: config.metadata?.nestingAnalysis || null,
             ...config.metadata
         };
 
@@ -227,7 +228,8 @@ export class Simulation {
             timelineEnd: null,
             detectedPatterns: [],
             overallRiskScore: 0,
-            tags: []
+            tags: [],
+            nestingAnalysis: null
         };
         this.updatedAt = Date.now();
     }

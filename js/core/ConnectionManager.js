@@ -30,6 +30,8 @@ class ConnectionManager {
         eventBus.on(Events.TRANSACTION_REMOVED, ({txId}) => this.removeConnection(txId));
         eventBus.on(Events.SIMULATION_LOADED,   ()  => this._reloadAll());
         eventBus.on(Events.ANALYSIS_COMPLETED,  ()  => this._colorSuspicious());
+        eventBus.on(Events.NESTING_ANALYSIS_COMPLETED, () => this._colorAllConnections());
+        eventBus.on(Events.IMPERMISSIBLE_DETECTED, ({ tx }) => this._flagImpermissible(tx));
     }
 
     /* ── Render ───────────────────────────────────────── */
@@ -50,8 +52,20 @@ class ConnectionManager {
             stroke:      color,
             strokeWidth: this._strokeWidth(tx.amount)
         };
-        if (tx.suspicious)  paintStyle.dashstyle = '4 3';
-        else if (tx.onBehalf) paintStyle.dashstyle = '6 3';
+        if (tx.flags?.includes('impermissible')) {
+            paintStyle.dashstyle = '2 2';
+        } else if (tx.suspicious) {
+            paintStyle.dashstyle = '4 3';
+        } else if (tx.relationshipType === 'nested_entity') {
+            paintStyle.dashstyle = '6 3';
+        } else if (tx.relationshipType === 'affiliate') {
+            paintStyle.dashstyle = '8 4';
+        } else if (tx.onBehalf) {
+            paintStyle.dashstyle = '6 3';
+        }
+
+        const relAbbrev = this._humanizeRel(tx.relationshipType);
+        const labelText = tx.currency + (relAbbrev ? ` · ${relAbbrev}` : '');
 
         const conn = this.jsPlumb.connect({
             source:    sourceEl,
@@ -63,7 +77,7 @@ class ConnectionManager {
             overlays: [
                 ['Arrow', { width: 12, length: 12, location: 1 }],
                 ['Label', {
-                    label:    `<span class="connection-label">${tx.currency}</span>`,
+                    label:    `<span class="connection-label">${labelText}</span>`,
                     cssClass: 'connection-label-overlay',
                     location: 0.5
                 }]
@@ -201,13 +215,50 @@ class ConnectionManager {
     /* ── Helpers ──────────────────────────────────────── */
 
     _connectionColor(tx) {
+        if (tx.flags?.includes('impermissible')) return '#B71C1C';
         if (tx.suspicious)  return Config.colors.connection.suspect;
+        if (tx.relationshipType && Config.colors.connection[tx.relationshipType]) {
+            return Config.colors.connection[tx.relationshipType];
+        }
         if (tx.crossBorder && tx.onBehalf) return '#1565C0'; // dark blue — both flags
         if (tx.crossBorder) return '#2196F3';                // blue — cross-border
         if (tx.onBehalf)    return '#7B1FA2';                // purple — on-behalf
         if (tx.method === 'crypto') return '#9C27B0';
         if (tx.method === 'cash')   return '#FF9800';
         return Config.colors.connection.default;
+    }
+
+    _humanizeRel(r) {
+        return { respondent: 'Resp', nested_entity: 'Nested', underlying_customer: 'UC', affiliate: 'Aff' }[r] || '';
+    }
+
+    _flagImpermissible(tx) {
+        const conn = this.connections.get(tx.id);
+        if (!conn) return;
+        conn.setPaintStyle({ stroke: '#B71C1C', strokeWidth: 3, dashstyle: '2 2' });
+    }
+
+    _colorAllConnections() {
+        stateManager.getAllTransactions().forEach(tx => {
+            const conn = this.connections.get(tx.id);
+            if (!conn) return;
+            const style = {
+                stroke:      this._connectionColor(tx),
+                strokeWidth: this._strokeWidth(tx.amount)
+            };
+            if (tx.flags?.includes('impermissible')) {
+                style.dashstyle = '2 2';
+            } else if (tx.suspicious) {
+                style.dashstyle = '4 3';
+            } else if (tx.relationshipType === 'nested_entity') {
+                style.dashstyle = '6 3';
+            } else if (tx.relationshipType === 'affiliate') {
+                style.dashstyle = '8 4';
+            } else if (tx.onBehalf) {
+                style.dashstyle = '6 3';
+            }
+            conn.setPaintStyle(style);
+        });
     }
 
     _strokeWidth(amount) {

@@ -386,6 +386,71 @@
     background: var(--color-success);
 }
 
+/* ========== Canvas Banners ========== */
+.canvas-banner-container {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    width: 80%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+
+.canvas-banner {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: all;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    animation: bannerSlideIn 0.3s ease-out;
+}
+
+.banner-impermissible {
+    background: #B71C1C;
+    color: white;
+    border-left: 4px solid #7F0000;
+}
+
+.banner-double-nesting {
+    background: #E65100;
+    color: white;
+    border-left: 4px solid #BF360C;
+}
+
+.banner-amber {
+    background: #F57F17;
+    color: white;
+    border-left: 4px solid #E65100;
+}
+
+.banner-dismiss {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.banner-dismiss:hover {
+    opacity: 0.8;
+}
+
+@keyframes bannerSlideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ========== Responsive Adjustments ========== */
 @media (max-width: 1024px) {
     .entity-node {

@@ -97,25 +97,13 @@
                 </div>
 
                 <div id="flow-canvas" class="flow-canvas">
+                    <!-- Banner overlay (above canvas) -->
+                    <div id="canvas-banner-container" class="canvas-banner-container"></div>
                     <!-- Entity nodes and connections will be rendered here -->
                     <div id="canvas-grid" class="canvas-grid"></div>
                     <div id="nodes-container" class="nodes-container"></div>
                 </div>
 
-                <div class="canvas-legend">
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #F44336;"></span>
-                        <span class="legend-label">Placement</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #FF9800;"></span>
-                        <span class="legend-label">Layering</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color" style="background: #4CAF50;"></span>
-                        <span class="legend-label">Integration</span>
-                    </div>
-                </div>
             </div>
 
             <!-- Right Sidebar: Property Panel -->
@@ -152,6 +140,14 @@
                         <h3>Detected Patterns</h3>
                         <div id="detected-patterns" class="detected-patterns">
                             <div class="no-patterns">No analysis run yet</div>
+                        </div>
+                    </div>
+
+                    <!-- Nesting Summary Section -->
+                    <div id="nesting-summary" class="panel-section">
+                        <h3>Nesting Summary</h3>
+                        <div id="nesting-summary-content">
+                            <div class="no-patterns">Run analysis to see nesting summary</div>
                         </div>
                     </div>
                 </div>

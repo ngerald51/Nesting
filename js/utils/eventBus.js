@@ -113,7 +113,14 @@ export const Events = {
     // Timeline events
     TIMELINE_PLAY: 'timeline:play',
     TIMELINE_PAUSE: 'timeline:pause',
-    TIMELINE_STEP: 'timeline:step'
+    TIMELINE_STEP: 'timeline:step',
+
+    // Nesting analysis events
+    NESTING_ANALYSIS_COMPLETED: 'nesting:analysis:completed',
+    IMPERMISSIBLE_DETECTED:     'nesting:impermissible:detected',
+    DOUBLE_NESTING_DETECTED:    'nesting:double:detected',
+    BANK_ANCHOR_CHANGED:        'nesting:bank:changed',
+    NPM_MODEL_CHANGED:          'nesting:npm:model:changed'
 };
 
 export default eventBus;

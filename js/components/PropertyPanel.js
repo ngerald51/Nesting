@@ -31,10 +31,6 @@ class PropertyPanel {
             `<option value="${t.id}" ${t.id === entity.type ? 'selected' : ''}>${t.icon} ${t.name}</option>`
         ).join('');
 
-        const stageOptions = ['', 'placement', 'layering', 'integration'].map(s =>
-            `<option value="${s}" ${entity.amlStage === s ? 'selected' : ''}>${s ? _cap(s) : 'None'}</option>`
-        ).join('');
-
         const riskColor = Config.colors.risk[entity.riskLevel] || '#9E9E9E';
 
         this.contentEl.innerHTML = `
@@ -51,10 +47,6 @@ class PropertyPanel {
             <div class="property-field">
               <label class="property-label">Jurisdiction</label>
               <select class="property-select" id="pp-jurisdiction">${jurOptions}</select>
-            </div>
-            <div class="property-field">
-              <label class="property-label">AML Stage</label>
-              <select class="property-select" id="pp-stage">${stageOptions}</select>
             </div>
             <div class="property-field">
               <label class="property-label">Notes</label>
@@ -84,6 +76,42 @@ class PropertyPanel {
           </div>` : ''}
 
           <div class="property-group">
+            <div class="property-group-title">Nesting Configuration</div>
+            <div class="property-field">
+              <label class="property-label">
+                <input type="checkbox" id="pp-is-bank" ${entity.isBank ? 'checked' : ''}>
+                Is BANK Anchor
+              </label>
+            </div>
+            <div class="property-field">
+              <label class="property-label">
+                <input type="checkbox" id="pp-same-group" ${entity.sameGroupAmlCtf ? 'checked' : ''}>
+                Same Group AML/CTF (F-10 exception)
+              </label>
+            </div>
+            ${entity.type === 'npm_fintech' ? `
+            <div class="property-field">
+              <label class="property-label">NPM Business Model</label>
+              <select class="property-select" id="pp-npm-model">
+                <option value="">— Select —</option>
+                ${['payment_institution','e_money','remittance','digital_wallet','open_banking'].map(v =>
+                    `<option value="${v}" ${entity.npmBusinessModel === v ? 'selected' : ''}>${v.replace(/_/g,' ')}</option>`
+                ).join('')}
+              </select>
+            </div>` : ''}
+            ${entity.hopDistance !== null && entity.hopDistance !== undefined ? `
+            <div class="property-field">
+              <label class="property-label">Hop Distance</label>
+              <div class="property-value">${entity.hopDistance === Infinity ? '∞ (unreachable)' : entity.hopDistance}</div>
+            </div>` : ''}
+            ${entity.permissibilityStatus ? `
+            <div class="property-field">
+              <label class="property-label">Permissibility</label>
+              <div class="property-value">${entity.permissibilityStatus.replace(/_/g,' ')}</div>
+            </div>` : ''}
+          </div>
+
+          <div class="property-group">
             <div class="property-group-title">Actions</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
               <button class="btn btn-primary" id="pp-save" style="flex:1">Save</button>
@@ -106,13 +134,25 @@ class PropertyPanel {
     }
 
     _saveEntity(entityId) {
-        stateManager.updateEntity(entityId, {
-            name:        document.getElementById('pp-name').value.trim(),
-            type:        document.getElementById('pp-type').value,
-            jurisdiction:document.getElementById('pp-jurisdiction').value,
-            amlStage:    document.getElementById('pp-stage').value || null,
-            metadata:    { owner: document.getElementById('pp-notes').value }
-        });
+        const isBankEl    = document.getElementById('pp-is-bank');
+        const sameGroupEl = document.getElementById('pp-same-group');
+        const npmModelEl  = document.getElementById('pp-npm-model');
+        const isBank      = isBankEl   ? isBankEl.checked   : false;
+        const sameGroup   = sameGroupEl ? sameGroupEl.checked : false;
+
+        const changes = {
+            name:            document.getElementById('pp-name').value.trim(),
+            type:            document.getElementById('pp-type').value,
+            jurisdiction:    document.getElementById('pp-jurisdiction').value,
+            metadata:        { owner: document.getElementById('pp-notes').value },
+            sameGroupAmlCtf: sameGroup
+        };
+        if (npmModelEl) changes.npmBusinessModel = npmModelEl.value || null;
+
+        stateManager.updateEntity(entityId, changes);
+
+        // Use dedicated setter for isBank so it emits BANK_ANCHOR_CHANGED
+        stateManager.setBankAnchor(entityId, isBank);
     }
 
     /* ── Transaction properties ───────────────────────── */
@@ -128,6 +168,16 @@ class PropertyPanel {
             ['check','Check'],
             ['trade','Trade Invoice']
         ].map(([v, l]) => `<option value="${v}" ${v === tx.method ? 'selected' : ''}>${l}</option>`).join('');
+
+        const relTypeOptions = [
+            ['','— Select type —'],
+            ['respondent','Respondent'],
+            ['nested_entity','Nested Entity'],
+            ['underlying_customer','Underlying Customer'],
+            ['affiliate','Affiliate']
+        ].map(([v, l]) =>
+            `<option value="${v}" ${v === (tx.relationshipType || '') ? 'selected' : ''}>${l}</option>`
+        ).join('');
 
         const onBehalfOfOptions = [
             `<option value="">— Select entity —</option>`,
@@ -154,6 +204,10 @@ class PropertyPanel {
             <div class="property-field">
               <label class="property-label">Method</label>
               <select class="property-select" id="pp-method">${methodOptions}</select>
+            </div>
+            <div class="property-field">
+              <label class="property-label">Relationship Type</label>
+              <select class="property-select" id="pp-rel-type">${relTypeOptions}</select>
             </div>
             <div class="property-field">
               <label class="property-label">Description</label>
@@ -201,12 +255,13 @@ class PropertyPanel {
         document.getElementById('pp-tx-save')?.addEventListener('click', () => {
             const onBehalf = document.getElementById('pp-on-behalf').checked;
             stateManager.updateTransaction(tx.id, {
-                currency:    (document.getElementById('pp-currency').value || 'USD').toUpperCase().slice(0,3),
-                method:      document.getElementById('pp-method').value,
-                description: document.getElementById('pp-desc').value,
-                crossBorder: document.getElementById('pp-cross-border').checked,
+                currency:         (document.getElementById('pp-currency').value || 'USD').toUpperCase().slice(0,3),
+                method:           document.getElementById('pp-method').value,
+                relationshipType: document.getElementById('pp-rel-type').value || null,
+                description:      document.getElementById('pp-desc').value,
+                crossBorder:      document.getElementById('pp-cross-border').checked,
                 onBehalf,
-                onBehalfOf:  onBehalf ? (document.getElementById('pp-on-behalf-of').value || '') : ''
+                onBehalfOf:       onBehalf ? (document.getElementById('pp-on-behalf-of').value || '') : ''
             });
         });
 

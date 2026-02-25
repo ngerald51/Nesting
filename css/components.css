@@ -594,6 +594,118 @@
     color: var(--color-text-primary);
 }
 
+/* ========== Nesting Badges ========== */
+.bank-anchor-badge {
+    background: #1565C0;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.hop-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    color: white;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.hop-badge.hop-0 { background: #1565C0; }
+.hop-badge.hop-1 { background: #388E3C; }
+.hop-badge.hop-2 { background: #F57C00; }
+.hop-badge.hop-3 { background: #C62828; }
+
+.cdd-gap-badge {
+    background: #FF5722;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.permissibility-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.permissibility-permissible {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid #4CAF50;
+}
+
+.permissibility-impermissible {
+    background: #FFEBEE;
+    color: #C62828;
+    border: 1px solid #F44336;
+}
+
+.permissibility-review_required {
+    background: #FFF3E0;
+    color: #E65100;
+    border: 1px solid #FF9800;
+}
+
+/* ========== Nesting Summary Panel ========== */
+.nesting-type-badge {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.nesting-primary      { background: #E3F2FD; color: #0D47A1; }
+.nesting-affiliate    { background: #FFF3E0; color: #E65100; }
+.nesting-double       { background: #FFEBEE; color: #C62828; }
+.nesting-impermissible{ background: #B71C1C; color: white; }
+.nesting-none         { background: #F5F5F5; color: #757575; }
+
+.nesting-hop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 8px 0;
+}
+
+.nesting-hop-table th {
+    padding: 4px 6px;
+    border-bottom: 1px solid #E0E0E0;
+    color: #757575;
+    text-align: left;
+}
+
+.nesting-hop-table td {
+    padding: 4px 6px;
+}
+
+.hop-row.hop-2 { color: #F57C00; font-weight: 600; }
+.hop-row.hop-3 { color: #C62828; font-weight: 700; }
+
+.nesting-flags {
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: #F5F5F5;
+    border-radius: 4px;
+}
+
 /* ========== Pattern Education ========== */
 .pattern-education-content {
     font-size: 13px;

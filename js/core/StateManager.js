@@ -10,6 +10,7 @@ import eventBus, { Events } from '../utils/eventBus.js';
 import storageManager from '../utils/storage.js';
 import { scoreAll } from '../algorithms/riskScoring.js';
 import { detectAll } from '../algorithms/patternDetection.js';
+import { runNestingAnalysis, detectImpermissiblePairs } from '../algorithms/nestingAnalysis.js';
 
 class StateManager {
     constructor() {
@@ -18,6 +19,13 @@ class StateManager {
         this.selectedTransactionId = null;
         this.connectingFromId = null;  // Entity waiting for a second click
         this.isDirty = false;
+        this._impermissibleTimer = null;
+
+        // Real-time impermissible check on new transactions (F-07)
+        eventBus.on(Events.TRANSACTION_ADDED, (tx) => {
+            clearTimeout(this._impermissibleTimer);
+            this._impermissibleTimer = setTimeout(() => this._quickImpermissibleCheck(tx), 500);
+        });
     }
 
     /* ── Simulation ────────────────────────────────────── */
@@ -177,11 +185,22 @@ class StateManager {
 
         eventBus.emit(Events.ANALYSIS_STARTED, null);
 
-        // Pattern detection (must run first so risk scoring can use it)
+        // 1. Nesting analysis first (pattern detectors need hopMap/impermissiblePairs)
+        const nestingResult = runNestingAnalysis(this.simulation);
+
+        // 2. Propagate per-entity nesting fields
+        const entities = Array.from(this.simulation.entities.values());
+        entities.forEach(e => {
+            e.hopDistance          = nestingResult.hopMap.get(e.id) ?? null;
+            e.cddGap               = (e.hopDistance !== null && e.hopDistance >= 2 && e.hopDistance !== Infinity);
+            e.permissibilityStatus = nestingResult.permissibilityByEntity.get(e.id) || null;
+        });
+
+        // 3. Pattern detection (can now read nestingAnalysis)
         const patterns = detectAll(this.simulation);
         this.simulation.metadata.detectedPatterns = patterns;
 
-        // Risk scoring
+        // 4. Risk scoring (entities now have hopDistance)
         const riskProfiles = scoreAll(this.simulation);
         let totalRisk = 0;
         riskProfiles.forEach((profile, entityId) => {
@@ -195,11 +214,41 @@ class StateManager {
             entityCount > 0 ? Math.round(totalRisk / entityCount) : 0;
 
         this.markDirty();
+
+        // 5. Emit events
+        eventBus.emit(Events.NESTING_ANALYSIS_COMPLETED, nestingResult);
+
+        if (nestingResult.doubleNestingChains.length > 0) {
+            eventBus.emit(Events.DOUBLE_NESTING_DETECTED, {
+                chains: nestingResult.doubleNestingChains
+            });
+        }
+
         eventBus.emit(Events.ANALYSIS_COMPLETED, {
             patterns,
             riskProfiles,
             overallScore: this.simulation.metadata.overallRiskScore
         });
+    }
+
+    setBankAnchor(entityId, isBank) {
+        const entity = this.simulation.entities.get(entityId);
+        if (!entity) return;
+        entity.isBank = isBank;
+        this.markDirty();
+        eventBus.emit(Events.BANK_ANCHOR_CHANGED, { entityId, isBank });
+        eventBus.emit(Events.ENTITY_UPDATED, entity);
+    }
+
+    _quickImpermissibleCheck(tx) {
+        const entities = Array.from(this.simulation.entities.values());
+        const transactions = Array.from(this.simulation.transactions.values());
+        const impermissible = detectImpermissiblePairs(entities, transactions);
+        const match = impermissible.find(p => p.txId === tx.id);
+        if (match) {
+            tx.addFlag('impermissible');
+            eventBus.emit(Events.IMPERMISSIBLE_DETECTED, { tx, pair: match });
+        }
     }
 
     /* ── Helpers ───────────────────────────────────────── */

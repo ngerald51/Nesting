@@ -7,6 +7,13 @@ import {
     findCycles, findTransactionChains, groupByTimeWindow,
     computeDegreeCentrality, buildGraph
 } from './graphAnalysis.js';
+import {
+    detectImpermissiblePairs,
+    detectDoubleNestingChains,
+    detectAffiliateFlow,
+    detectMultiNpmClusters,
+    detectPrimaryNestingPaths
+} from './nestingAnalysis.js';
 
 /**
  * Run all detectors and return array of pattern results
@@ -17,6 +24,8 @@ export function detectAll(simulation) {
 
     if (entities.length === 0 || transactions.length === 0) return [];
 
+    const na = simulation.metadata.nestingAnalysis;
+
     const results = [
         ...detectSmurfing(entities, transactions),
         ...detectRoundTripping(entities, transactions),
@@ -25,7 +34,12 @@ export function detectAll(simulation) {
         ...detectNestedShells(entities, transactions),
         ...detectCuckooSmurfing(entities, transactions),
         ...detectCryptoMixing(entities, transactions),
-        ...detectNestingRisk(entities, transactions)
+        ...detectNestingRisk(entities, transactions),
+        ...detectPrimaryNestingPattern(entities, transactions, na),
+        ...detectDoubleNestingPattern(entities, transactions, na),
+        ...detectImpermissibleNestingPattern(entities, transactions, na),
+        ...detectAffiliateNestingPattern(entities, transactions, na),
+        ...detectMultiNpmOverlapPattern(entities, transactions, na)
     ];
 
     // Deduplicate patterns of the same type affecting the same entities
@@ -367,6 +381,85 @@ function detectNestingRisk(entities, transactions) {
     }
 
     return patterns;
+}
+
+/* ---- Nesting-specific detectors (use pre-computed nestingAnalysis) ---- */
+
+function detectPrimaryNestingPattern(entities, transactions, na) {
+    if (!na || na.nestingType !== 'primary') return [];
+    const paths = na.primaryNestingPaths || [];
+    if (paths.length === 0) return [];
+    const allEntities = [...new Set(paths.flatMap(p => p.entities))];
+    const allTxs      = [...new Set(paths.flatMap(p => p.transactions))];
+    return [{
+        type: 'primary_nesting',
+        severity: 'medium',
+        description: `${paths.length} primary nesting path(s) detected: BANK → NPM → Nested FI → End Customer`,
+        entities: allEntities,
+        transactions: allTxs
+    }];
+}
+
+function detectDoubleNestingPattern(entities, transactions, na) {
+    if (!na) return [];
+    const chains = na.doubleNestingChains || [];
+    if (chains.length === 0) return [];
+    const allIds = [...new Set(chains.flat())];
+    return [{
+        type: 'double_nesting',
+        severity: 'critical',
+        description: `${chains.length} double nesting chain(s) with ${allIds.length} entities at hop ≥ 3`,
+        entities: allIds,
+        transactions: transactions
+            .filter(tx => allIds.includes(tx.sourceId) || allIds.includes(tx.targetId))
+            .map(tx => tx.id)
+    }];
+}
+
+function detectImpermissibleNestingPattern(entities, transactions, na) {
+    if (!na) return [];
+    const pairs = na.impermissiblePairs || [];
+    if (pairs.length === 0) return [];
+    const entityIds = [...new Set(pairs.flatMap(p => [p.sourceId, p.targetId]))];
+    const txIds     = pairs.map(p => p.txId);
+    return [{
+        type: 'impermissible_nesting',
+        severity: 'critical',
+        description: `${pairs.length} impermissible connection(s) detected (NPM/Bank ↔ Money Service Business)`,
+        entities: entityIds,
+        transactions: txIds
+    }];
+}
+
+function detectAffiliateNestingPattern(entities, transactions, na) {
+    if (!na || !na.affiliateFlow?.hasAffiliate) return [];
+    const chains = na.affiliateFlow.affiliateChains || [];
+    const allIds = [...new Set(chains.flat())];
+    return [{
+        type: 'affiliate_nesting',
+        severity: 'high',
+        description: `Affiliate entity involvement detected in ${chains.length} chain(s)`,
+        entities: allIds,
+        transactions: transactions
+            .filter(tx => allIds.includes(tx.sourceId) || allIds.includes(tx.targetId))
+            .map(tx => tx.id)
+    }];
+}
+
+function detectMultiNpmOverlapPattern(entities, transactions, na) {
+    if (!na) return [];
+    const clusters = na.multiNpmClusters || [];
+    if (clusters.length === 0) return [];
+    const allIds = [...new Set(clusters.flat())];
+    return [{
+        type: 'multi_npm_same_customer',
+        severity: 'high',
+        description: `${clusters.length} multi-NPM cluster(s): ${allIds.length} NPMs sharing downstream customers`,
+        entities: allIds,
+        transactions: transactions
+            .filter(tx => allIds.includes(tx.sourceId) || allIds.includes(tx.targetId))
+            .map(tx => tx.id)
+    }];
 }
 
 /* ---- Helpers ---- */

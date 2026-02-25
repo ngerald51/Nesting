@@ -173,6 +173,36 @@ export const entityTypes = [
         amlStage: 'layering',
         color: '#FF9800',
         tooltip: 'Non-bank payment institutions and fintech companies provide digital payment rails that can be exploited for rapid layering of funds across multiple accounts.'
+    },
+    {
+        id: 'bank',
+        name: 'Bank (Anchor)',
+        icon: '🏛️',
+        description: 'Correspondent or sponsoring bank — the BANK anchor node in a nesting analysis',
+        baseRisk: 15,
+        amlStage: null,
+        color: '#1565C0',
+        tooltip: 'The Bank anchor entity represents the sponsoring or correspondent bank that sits at hop 0 in a nesting chain. All other entities are measured by their BFS distance from this anchor.'
+    },
+    {
+        id: 'affiliate',
+        name: 'Affiliate Entity',
+        icon: '🔗',
+        description: 'Entity affiliated with the NPM or bank but operating under a separate AML/CTF regime',
+        baseRisk: 40,
+        amlStage: null,
+        color: '#F57C00',
+        tooltip: 'Affiliate entities share a group or ownership relationship with a principal bank or NPM but operate independently. They require enhanced due diligence before transactions are permitted.'
+    },
+    {
+        id: 'end_customer',
+        name: 'End Customer',
+        icon: '🧑‍💼',
+        description: 'The ultimate customer accessing financial services through the nesting chain',
+        baseRisk: 20,
+        amlStage: null,
+        color: '#43A047',
+        tooltip: 'End customers are the individuals or entities ultimately transacting through the nesting structure. CDD gaps at this level are a primary red flag in nesting risk assessments.'
     }
 ];
 
