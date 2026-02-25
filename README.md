@@ -93,11 +93,6 @@ Entities unreachable from any BANK → hop ∞
 4. **primary** — BANK→NPM→Nested FI→End Customer path found
 5. **null** — no nesting detected
 
-### Impermissible Pairs (always blocked)
-| Pair | Rule |
-|------|------|
-| NPM FINTECH ↔ Money Service Business | Always impermissible |
-| Bank ↔ Money Service Business | Always impermissible |
 
 > Check fires 500 ms after every `TRANSACTION_ADDED` event.
 > Alert banner auto-dismisses after 8 seconds.
