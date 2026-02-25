@@ -116,7 +116,9 @@ class ConnectionManager {
     /* ── Animation ────────────────────────────────────── */
 
     /**
-     * Animate a single transaction: a particle travels along the connection path
+     * Animate a single transaction: a particle travels along the connection path.
+     * Uses dagre to compute edge waypoints in CSS coordinate space so the dot
+     * stays on the line at any zoom / pan level.
      */
     animateTransaction(txId, durationMs = Config.timeline.defaultAnimationDuration) {
         const tx = stateManager.getTransaction(txId);
@@ -125,61 +127,199 @@ class ConnectionManager {
         const conn = this.connections.get(txId);
         if (!conn) return;
 
-        // Get path element from jsPlumb SVG
-        const pathEl = conn.connector.path;
-        if (!pathEl) return;
-
         const container = document.getElementById('nodes-container');
-        const totalLength = pathEl.getTotalLength();
+        const color = this._connectionColor(tx);
 
         const particle = document.createElement('div');
         particle.className = 'transaction-particle';
         particle.style.cssText = `
             position: absolute;
             width: 10px; height: 10px;
-            background: ${this._connectionColor(tx)};
+            background: ${color};
             border-radius: 50%;
-            box-shadow: 0 0 8px ${this._connectionColor(tx)};
+            box-shadow: 0 0 8px ${color};
             pointer-events: none;
             z-index: 500;
             transform: translate(-50%, -50%);
         `;
         container.appendChild(particle);
 
-        // Highlight the connection while animating
         conn.setPaintStyle({ stroke: Config.colors.connection.animated, strokeWidth: 3 });
 
+        // Primary: dagre-computed waypoints in CSS coordinate space
+        const waypoints = this._buildDagreEdgePoints(tx);
+
         let startTime = null;
+
+        if (waypoints && waypoints.length >= 2) {
+            const animate = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / durationMs, 1);
+                const pt = this._interpolatePolyline(waypoints, progress);
+                particle.style.left = `${pt.x}px`;
+                particle.style.top  = `${pt.y}px`;
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    particle.remove();
+                    this._restoreConnectionStyle(tx, conn);
+                }
+            };
+            requestAnimationFrame(animate);
+            return;
+        }
+
+        // Fallback: SVG path with screen-CTM coordinate conversion
+        const pathEl = conn.connector?.path;
+        if (!pathEl) { particle.remove(); return; }
+
+        const totalLength = pathEl.getTotalLength();
+        const canvasEl    = document.getElementById('flow-canvas');
 
         const animate = (timestamp) => {
             if (!startTime) startTime = timestamp;
             const progress = Math.min((timestamp - startTime) / durationMs, 1);
-            const point = pathEl.getPointAtLength(progress * totalLength);
+            const svgRaw   = pathEl.getPointAtLength(progress * totalLength);
 
-            // Offset by pan/zoom of the container
-            const rect = container.getBoundingClientRect();
-            const canvasRect = document.getElementById('flow-canvas').getBoundingClientRect();
-
-            // Point is in SVG space which matches canvas space
-            particle.style.left = `${point.x}px`;
-            particle.style.top  = `${point.y}px`;
+            // Convert SVG-local → screen → #nodes-container CSS space
+            const svgPt    = pathEl.ownerSVGElement.createSVGPoint();
+            svgPt.x = svgRaw.x;
+            svgPt.y = svgRaw.y;
+            const screenPt  = svgPt.matrixTransform(pathEl.getScreenCTM());
+            const canvasRect = canvasEl.getBoundingClientRect();
+            particle.style.left = `${(screenPt.x - canvasRect.left - this.canvas.panX) / this.canvas.zoom}px`;
+            particle.style.top  = `${(screenPt.y - canvasRect.top  - this.canvas.panY) / this.canvas.zoom}px`;
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
                 particle.remove();
-                // Restore original style
-                const restored = {
-                    stroke:      this._connectionColor(tx),
-                    strokeWidth: this._strokeWidth(tx.amount)
-                };
-                if (tx.suspicious)  restored.dashstyle = '4 3';
-                else if (tx.onBehalf) restored.dashstyle = '6 3';
-                conn.setPaintStyle(restored);
+                this._restoreConnectionStyle(tx, conn);
             }
         };
-
         requestAnimationFrame(animate);
+    }
+
+    /**
+     * Build edge waypoints for `tx` in #nodes-container CSS coordinate space
+     * using dagre for layout-aware routing.
+     *
+     * Strategy:
+     *  1. Feed every entity to dagre with its actual CSS bounding box.
+     *  2. Run dagre.layout() — this assigns dagre-space positions and edge points.
+     *  3. Derive a 2-D similarity transform (rotation + scale + translate) from
+     *     the source/target node pair: dagre-space → CSS-space.
+     *  4. Apply that transform to every edge waypoint so the particle follows a
+     *     path in CSS space that preserves the dagre routing shape.
+     */
+    _buildDagreEdgePoints(tx) {
+        if (typeof dagre === 'undefined') return null;
+
+        const g = new dagre.graphlib.Graph({ multigraph: true });
+        g.setGraph({ rankdir: 'LR', ranksep: 60, nodesep: 40 });
+        g.setDefaultEdgeLabel(() => ({}));
+
+        const cssCenter = {};
+        stateManager.getAllEntities().forEach(entity => {
+            const el = this.nodeManager.getNodeEl(entity.id);
+            if (!el) return;
+            const w = el.offsetWidth  || Config.canvas.nodeWidth;
+            const h = el.offsetHeight || 120;
+            cssCenter[entity.id] = {
+                x: (parseFloat(el.style.left) || 0) + w / 2,
+                y: (parseFloat(el.style.top)  || 0) + h / 2
+            };
+            g.setNode(entity.id, { width: w, height: h });
+        });
+
+        stateManager.getAllTransactions().forEach(t => {
+            if (g.hasNode(t.sourceId) && g.hasNode(t.targetId)) {
+                try { g.setEdge(t.sourceId, t.targetId, {}, t.id); } catch (_) {}
+            }
+        });
+
+        try { dagre.layout(g); } catch (_) { return null; }
+
+        let edgeData = null;
+        try {
+            edgeData = g.edge({ v: tx.sourceId, w: tx.targetId, name: tx.id });
+        } catch (_) {
+            try { edgeData = g.edge(tx.sourceId, tx.targetId); } catch (_) {}
+        }
+        if (!edgeData?.points?.length) return null;
+
+        const srcD = g.node(tx.sourceId);
+        const tgtD = g.node(tx.targetId);
+        const srcC = cssCenter[tx.sourceId];
+        const tgtC = cssCenter[tx.targetId];
+        if (!srcD || !tgtD || !srcC || !tgtC) return null;
+
+        // Similarity transform: dagre space → CSS space
+        // Using source/target node centres as the two control points.
+        // Represents a complex multiplication w = a*z + b where a,b ∈ ℂ.
+        const dxD = tgtD.x - srcD.x, dyD = tgtD.y - srcD.y;
+        const dxC = tgtC.x - srcC.x, dyC = tgtC.y - srcC.y;
+        const lenSqD = dxD * dxD + dyD * dyD;
+
+        if (lenSqD < 1) {
+            // Degenerate (source === target in dagre): straight line in CSS space
+            const n = edgeData.points.length;
+            return edgeData.points.map((_, i) => ({
+                x: srcC.x + (i / Math.max(n - 1, 1)) * (tgtC.x - srcC.x),
+                y: srcC.y + (i / Math.max(n - 1, 1)) * (tgtC.y - srcC.y)
+            }));
+        }
+
+        const aRe = (dxC * dxD + dyC * dyD) / lenSqD;
+        const aIm = (dyC * dxD - dxC * dyD) / lenSqD;
+        const bRe = srcC.x - (aRe * srcD.x - aIm * srcD.y);
+        const bIm = srcC.y - (aRe * srcD.y + aIm * srcD.x);
+
+        return edgeData.points.map(p => ({
+            x: aRe * p.x - aIm * p.y + bRe,
+            y: aRe * p.y + aIm * p.x + bIm
+        }));
+    }
+
+    /**
+     * Interpolate a position at fraction `t` [0,1] along a polyline.
+     */
+    _interpolatePolyline(points, t) {
+        if (points.length === 1) return points[0];
+        const segs = [];
+        let total = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+            const len = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y);
+            segs.push(len);
+            total += len;
+        }
+        if (total === 0) return points[0];
+        const target = t * total;
+        let acc = 0;
+        for (let i = 0; i < segs.length; i++) {
+            if (acc + segs[i] >= target || i === segs.length - 1) {
+                const segT = segs[i] > 0 ? (target - acc) / segs[i] : 0;
+                return {
+                    x: points[i].x + segT * (points[i + 1].x - points[i].x),
+                    y: points[i].y + segT * (points[i + 1].y - points[i].y)
+                };
+            }
+            acc += segs[i];
+        }
+        return points[points.length - 1];
+    }
+
+    _restoreConnectionStyle(tx, conn) {
+        const style = {
+            stroke:      this._connectionColor(tx),
+            strokeWidth: this._strokeWidth(tx.amount)
+        };
+        if (tx.flags?.includes('impermissible'))        style.dashstyle = '2 2';
+        else if (tx.suspicious)                         style.dashstyle = '4 3';
+        else if (tx.relationshipType === 'nested_entity') style.dashstyle = '6 3';
+        else if (tx.relationshipType === 'affiliate')     style.dashstyle = '8 4';
+        else if (tx.onBehalf)                            style.dashstyle = '6 3';
+        conn.setPaintStyle(style);
     }
 
     /* ── Analysis coloring ────────────────────────────── */
