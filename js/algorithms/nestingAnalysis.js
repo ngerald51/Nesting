@@ -110,16 +110,27 @@ export function detectImpermissiblePairs(entities, transactions) {
     return results;
 }
 
+// Terminal entity types that are endpoints/sources, never nested intermediaries.
+// Reaching hop >= 3 as a terminal entity is expected (e.g. end_customer in a
+// primary nesting path) and must NOT be treated as double nesting.
+const TERMINAL_TYPES = new Set(['end_customer', 'originator', 'final_beneficiary']);
+
 /**
  * Detect clusters of entities with hopDistance >= 3 (double nesting chains).
  * Returns array of entity-ID arrays (connected subgraphs at hop >= 3).
+ *
+ * Terminal entity types (end_customer, originator, final_beneficiary) are
+ * excluded — they are natural chain endpoints, not nested intermediaries.
  */
 export function detectDoubleNestingChains(entities, transactions, hopMap) {
     // Infinity hop (unreachable from any BANK anchor) must NOT be treated as double-nesting.
-    // Only finite hop distances >= 3 qualify.
+    // Only finite hop distances >= 3 qualify, and only for intermediary entity types.
     const doubleIds = new Set(
         entities
-            .filter(e => { const h = hopMap.get(e.id) ?? Infinity; return isFinite(h) && h >= 3; })
+            .filter(e => {
+                const h = hopMap.get(e.id) ?? Infinity;
+                return isFinite(h) && h >= 3 && !TERMINAL_TYPES.has(e.type);
+            })
             .map(e => e.id)
     );
     if (doubleIds.size === 0) return [];
