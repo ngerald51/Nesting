@@ -50,8 +50,8 @@ A browser-based educational tool for building, visualising, and analysing AML (A
 | 📈 | Investment Fund | 58 |
 | 🛒 | Merchant | 35 |
 | 🏦 | Correspondent Bank | 20 |
-| 🏛️ | Bank (Anchor) | **15** | 
-| 🔗 | Affiliate Entity | 40 | 
+| 🏛️ | Bank (Anchor) | **15** |
+| 🔗 | Affiliate Entity | 40 |
 | 🧑‍💼 | End Customer | 20 |
 
 ### Payment Methods
@@ -90,7 +90,14 @@ Entities unreachable from any BANK → hop ∞
 4. **primary** — BANK→NPM→Nested FI→End Customer path found
 5. **null** — no nesting detected
 
+### Impermissible Pairs (always blocked)
+| Pair | Rule |
+|------|------|
+| NPM FINTECH ↔ Money Service Business | Always impermissible |
+| Bank ↔ Money Service Business | Always impermissible |
 
+> Check fires 500 ms after every `TRANSACTION_ADDED` event.
+> Alert banner auto-dismisses after 8 seconds.
 
 ### Permissibility Assignment
 | Condition | Status |
@@ -174,7 +181,7 @@ Entities unreachable from any BANK → hop ∞
 | P-07 | **Crypto Mixing** | ≥2 inputs, ≥2 outputs, <15% in/out imbalance | Medium |
 | P-08 | **Nesting Risk** | ≥2 nesting-type entities connected | Critical (≥3), High |
 | P-09 | **Primary Nesting** | BANK→NPM→Nested FI→End Customer path | Medium |
-| P-10 | **Double Nesting** | hop ≥ 3 chains detected | **Critical** |
+| P-10 | **Double Nesting** | hop ≥ 3 chains detected (intermediaries only) | **Critical** |
 | P-11 | **Impermissible Nesting** | NPM/Bank ↔ MSB pair | **Critical** |
 | P-12 | **Affiliate Nesting** | Affiliate entities present | High |
 | P-13 | **Multi-NPM Cluster** | 2+ NPMs sharing downstream entity ≤2 hops | High |
@@ -268,7 +275,6 @@ User clicks Analyse
 | Animation | Coloured particle travels source → target, **1,800 ms** per txn at 1× |
 
 ---
-
 
 ### Performance & Compatibility
 - **Target:** 50 entities / 100 transactions → analysis completes in < 2 s
